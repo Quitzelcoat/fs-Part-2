@@ -2,13 +2,15 @@ import { useState, useEffect } from "react";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
-import personService from "./services/personService"; // Import the service module
+import Notification from "./components/Notification";
+import personService from "./services/personService";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     personService.getAll().then((initialPersons) => setPersons(initialPersons));
@@ -17,11 +19,9 @@ const App = () => {
   const addPerson = (event) => {
     event.preventDefault();
 
-    // Check if the name already exists
     const existingPerson = persons.find((person) => person.name === newName);
 
     if (existingPerson) {
-      // Ask for confirmation before updating the number
       const confirmUpdate = window.confirm(
         `${newName} is already added to the phonebook, replace the old number with the new one?`
       );
@@ -29,7 +29,6 @@ const App = () => {
       if (confirmUpdate) {
         const updatedPerson = { ...existingPerson, number: newNumber };
 
-        // Update the person's number using the PUT method
         personService
           .update(existingPerson.id, updatedPerson)
           .then((returnedPerson) => {
@@ -38,9 +37,15 @@ const App = () => {
                 person.id !== existingPerson.id ? person : returnedPerson
               )
             );
+
+            setNotification(`Updated ${newName}'s number`);
+
+            setTimeout(() => setNotification(null), 5000);
+
             setNewName("");
             setNewNumber("");
           })
+
           // eslint-disable-next-line no-unused-vars
           .catch((error) => {
             alert(
@@ -59,9 +64,29 @@ const App = () => {
 
       personService.create(personObject).then((returnedPerson) => {
         setPersons(persons.concat(returnedPerson));
+
+        setNotification(`Added ${newName}`);
+
+        setTimeout(() => setNotification(null), 5000);
+
         setNewName("");
         setNewNumber("");
       });
+    }
+  };
+
+  const handleDelete = (id, name) => {
+    const confirmDelete = window.confirm(`Delete ${name}?`);
+    if (confirmDelete) {
+      personService
+        .remove(id)
+        .then(() => {
+          setPersons(persons.filter((person) => person.id !== id));
+        })
+        // eslint-disable-next-line no-unused-vars
+        .catch((error) => {
+          alert(`Failed to delete ${name}, it may have already been deleted.`);
+        });
     }
   };
 
@@ -76,8 +101,12 @@ const App = () => {
   return (
     <>
       <h2>Phonebook</h2>
+
+      <Notification message={notification} />
+
       <Filter searchTerm={searchTerm} onSearchChange={handleSearchChange} />
       <h2>add a new</h2>
+
       <PersonForm
         newName={newName}
         newNumber={newNumber}
@@ -86,7 +115,7 @@ const App = () => {
         onSubmit={addPerson}
       />
       <h2>Numbers</h2>
-      <Persons persons={filteredPersons} />
+      <Persons persons={filteredPersons} onDelete={handleDelete} />
     </>
   );
 };
