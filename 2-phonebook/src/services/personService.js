@@ -2,7 +2,8 @@
 // const baseUrl = "http://localhost:3001/persons";
 
 // FrontEnd with backend
-const baseUrl = "http://localhost:3001/api/persons";
+// const baseUrl = "http://localhost:3001/api/persons";
+const baseUrl = "/api/persons";
 
 // Fetch all persons
 const getAll = () => {
