@@ -62,16 +62,23 @@ const App = () => {
         number: newNumber,
       };
 
-      personService.create(personObject).then((returnedPerson) => {
-        setPersons(persons.concat(returnedPerson));
+      personService
+        .create(personObject)
+        .then((createPerson) => {
+          setPersons(persons.concat(createPerson));
 
-        setNotification(`Added ${newName}`);
+          setNotification(`Added ${newName}`);
 
-        setTimeout(() => setNotification(null), 5000);
+          setTimeout(() => setNotification(null), 5000);
 
-        setNewName("");
-        setNewNumber("");
-      });
+          setNewName("");
+          setNewNumber("");
+        })
+        .catch((error) => {
+          console.log(error.response.data.error);
+          setNotification(error.response.data.error || "An error occurred.");
+          setTimeout(() => setNotification(null), 5000);
+        });
     }
   };
 
